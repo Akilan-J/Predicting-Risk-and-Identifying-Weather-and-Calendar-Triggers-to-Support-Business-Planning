@@ -350,7 +350,7 @@ def page_insights():
     h = c1.segmented_control("Horizon", hs, default=hs[0], format_func=lambda x: f"Day +{x}", key="th_h") or hs[0]
     ratio = c2.slider("A missed high-risk day costs … false alarms", 1, 20, 5,
                       help="If a missed day costs 5× a false alarm, set 5.")
-    t = c3.slider("Alert threshold (probability)", 0.05, 0.95, float(st.session_state.alert_t), 0.01, key="alert_slider")
+    t = c3.slider("Alert threshold (probability)", 0.01, 0.99, float(st.session_state.alert_t), 0.01, key="alert_slider")
     st.session_state.alert_t = t
     d = preds[preds.horizon == h]
     y, p = d.actual.values.astype(int), d.prob.values
@@ -360,7 +360,7 @@ def page_insights():
     b_fp = int(((today == 1) & (y == 0) & ok).sum())
     b_fn = int(((today == 0) & (y == 1) & ok).sum())
 
-    grid = np.round(np.arange(0.05, 0.96, 0.01), 2)
+    grid = np.round(np.arange(0.01, 0.995, 0.01), 2)
     fa = np.array([((p >= g) & (y == 0)).sum() for g in grid])
     miss = np.array([((p < g) & (y == 1)).sum() for g in grid])
     cost = fa + ratio * miss
@@ -409,14 +409,16 @@ def page_insights():
     st.markdown("")
 
     st.subheader("3. What-if planner")
-    st.caption("Describe a day; see how often days like it were followed by a high-risk day (2018–2024, checked on 2025–26), "
-               "and what each sector should do.")
+    st.caption("Describe a day using the same categories as M4's rules; see how often days like it were followed by a "
+               "high-risk day (2018–2024, checked on 2025–26), and what each sector should do.")
     c = st.columns(4)
-    season = c[0].selectbox("Season", ["peak winter", "shoulder", "spring", "monsoon"])
-    wind = c[1].radio("Wind", ["calm", "moderate", "windy"], horizontal=True)
-    rain = c[2].radio("Rain", ["dry", "rain"], horizontal=True)
-    diwali = c[3].toggle("Diwali window")
-    res = D.rule_check({"Season": [season], "Wind": [wind], "Rain": [rain], "Diwali": ["window" if diwali else "no"]})
+    season = c[0].selectbox("Season", ["Post-monsoon", "Winter", "Pre-monsoon", "Monsoon"],
+                            help="Post-monsoon = Oct–Dec, Winter = Jan–Feb, Pre-monsoon = Mar–May, Monsoon = Jun–Sep")
+    wind = c[1].radio("Wind", ["Low wind", "Mid wind", "High wind"], horizontal=True)
+    rain = c[2].radio("Rain", ["No rain", "Rain"], horizontal=True)
+    festival = c[3].toggle("Diwali window (±5 days)")
+    res = D.rule_check({"Season": [season], "Wind": [wind], "Rain": [rain],
+                        "Festival": ["Diwali window" if festival else "No Diwali window"]})
     tr = res["train"]
     if tr["days"] < 5:
         st.warning(f"Only {tr['days']} similar days in the data: too few for a reliable answer.")

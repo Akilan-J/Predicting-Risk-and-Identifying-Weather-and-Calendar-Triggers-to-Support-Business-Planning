@@ -303,13 +303,40 @@ def load_rules() -> tuple[pd.DataFrame, bool]:
     return rules, False
 
 
+M4_SEASONS = {"winter": "Winter", "pre_monsoon": "Pre-monsoon", "monsoon": "Monsoon", "post_monsoon": "Post-monsoon"}
+
+
+@st.cache_data
+def m4_pairs() -> pd.DataFrame:
+    """Day pairs (conditions on day t -> high_risk on day t+1) built exactly as in M4's notebook
+    (M4_Association_Rule_Mining.ipynb, which produced m4_arm_dashboard.csv): tercile bins fitted on 2018-2024
+    pairs, rain = precip > 0, and season / Diwali window / weekend / yesterday's status all of day t."""
+    raw = load_base()
+    p = raw.copy()
+    p["next_high_risk"] = raw.high_risk.shift(-1)
+    p = p.iloc[:-1].dropna(subset=["high_risk", "next_high_risk"])
+    train = p.date <= pd.Timestamp("2024-12-31")
+    out = pd.DataFrame({"date": p.date, "next_high_risk": p.next_high_risk.astype(int)})
+    for col, name, labels in [("temp_mean", "Temp", ["Cold", "Mild", "Hot"]),
+                              ("humidity_mean", "Humidity", ["Low humidity", "Mid humidity", "High humidity"]),
+                              ("wind_speed_mean", "Wind", ["Low wind", "Mid wind", "High wind"]),
+                              ("pressure_mean", "Pressure", ["Low pressure", "Mid pressure", "High pressure"])]:
+        e = np.quantile(p.loc[train, col].dropna(), [0, 1 / 3, 2 / 3, 1])
+        e[0], e[-1] = -np.inf, np.inf                                   # open outer bins: <= q1 / > q2, as in M4
+        out[name] = pd.cut(p[col], e, labels=labels).astype(str)
+    out["Rain"] = np.where(p.precip_sum > 0, "Rain", "No rain")
+    out["Season"] = p.season.map(M4_SEASONS).values
+    out["Festival"] = np.where(p.is_festival_window == 1, "Diwali window", "No Diwali window")
+    out["Weekend"] = np.where(p.is_weekend == 1, "Weekend", "Weekday")
+    out["Yesterday"] = np.where(p.high_risk == 1, "Yesterday was high-risk", "Yesterday not high-risk")
+    return out
+
+
 def rule_check(conds: dict) -> dict:
-    """Live rule builder: support / confidence / lift for any user-chosen set of conditions."""
-    df = load_base()
-    train = df.date < TEST_START
-    c = bin_conditions(df, train).dropna(subset=["next_high_risk"])
+    """Support / confidence / lift for user-chosen conditions, on M4's day pairs (train 2018-24, test 2025-26)."""
+    c = m4_pairs()
     res = {}
-    for name, part in [("train", c[c.date < TEST_START]), ("test", c[c.date >= TEST_START])]:
+    for name, part in [("train", c[c.date <= pd.Timestamp("2024-12-31")]), ("test", c[c.date >= TEST_START])]:
         mask = np.ones(len(part), dtype=bool)
         for k, v in conds.items():
             if v:
@@ -317,6 +344,6 @@ def rule_check(conds: dict) -> dict:
         base = part.next_high_risk.mean()
         n = int(mask.sum())
         conf = part.next_high_risk.values[mask].mean() if n else np.nan
-        res[name] = dict(days=n, support=n / len(part), confidence=conf,
+        res[name] = dict(days=n, support=(part.next_high_risk.values[mask].sum()) / len(part), confidence=conf,
                          lift=conf / base if n else np.nan, base_rate=base)
     return res
