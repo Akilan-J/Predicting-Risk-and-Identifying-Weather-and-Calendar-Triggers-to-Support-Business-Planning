@@ -9,7 +9,7 @@ Contract files:
     p2_series.csv          (M2)  date, pm25_target, target_source, missing, high_risk
     p2_forecasts.csv       (M3)  forecasts per horizon (+ intervals if available)
     p2_ts_metrics.csv      (M3)  MAE / RMSE per horizon
-    p2_rules.csv           (M4)  antecedent, consequent, support, confidence, lift, test_confidence
+    m4_arm_dashboard.csv   (M4)  rule_text, set, support, confidence, lift (+ CI), test_conf, test_n, status
     m5_test_predictions.csv (Phase 1) test-set probabilities
 """
 from pathlib import Path
@@ -34,7 +34,7 @@ def file_status():
         "cleaned_final.csv": "Team (Phase 1)",
         "m3_test_predictions.csv": "M3",
         "m3_test_metrics.csv": "M3",
-        "p2_rules.csv": "M4",
+        "m4_arm_dashboard.csv": "M4",
         "m5_test_predictions.csv": "M5 (Phase 1)",
     }
     return [(n, owner, (DATA / n).exists()) for n, owner in names.items()]
@@ -248,12 +248,21 @@ def bin_conditions(df: pd.DataFrame, fit_mask) -> pd.DataFrame:
 def load_rules() -> tuple[pd.DataFrame, bool]:
     """Ranked rules 'conditions on day t -> high-risk on day t+1'.
 
-    Real file: p2_rules.csv (M4). Placeholder: mlxtend Apriori on pre-2025 days, Set A (weather +
-    calendar) and Set B (+ yesterday's status), with confidence re-checked on 2025-2026.
+    Real file: m4_arm_dashboard.csv (M4's notebook output, FP-Growth). Placeholder: mlxtend Apriori on
+    pre-2025 days, Set A (weather + calendar) and Set B (+ yesterday's status), re-checked on 2025-2026.
     """
-    p = DATA / "p2_rules.csv"
+    p = DATA / "m4_arm_dashboard.csv"
     if p.exists():
-        return pd.read_csv(p), True
+        r = pd.read_csv(p)
+        sets = {"A": "A: weather + calendar", "B": "B: + yesterday's status"}
+        out = pd.DataFrame({
+            "set": r["set"].map(sets).fillna(r["set"]),
+            "antecedent": r["rule_text"].str.replace(" + ", " AND ", regex=False),
+            "consequent": "high-risk next day", "n_conditions": r["k"],
+            "support": r["support"], "confidence": r["confidence"], "lift": r["lift"],
+            "lift_ci_lo": r.get("lift_ci_lo"), "lift_ci_hi": r.get("lift_ci_hi"),
+            "test_days": r.get("test_n"), "test_confidence": r.get("test_conf"), "status": r.get("status")})
+        return out.sort_values(["lift", "support"], ascending=False).reset_index(drop=True), True
 
     from mlxtend.frequent_patterns import apriori
 

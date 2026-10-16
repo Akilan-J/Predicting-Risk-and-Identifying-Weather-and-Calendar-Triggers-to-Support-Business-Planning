@@ -272,7 +272,7 @@ def page_forecast():
 def page_rules():
     hero("Rule Explorer · Method 2: Association rules",
          "Which weather and calendar conditions on day t are followed by a high-risk day t+1?")
-    source_badge(rules_real, "M4 (p2_rules.csv)")
+    source_badge(rules_real, "M4 (m4_arm_dashboard.csv)")
     r = rules.copy()
     with st.container(border=True):
         c1, c2, c3, c4 = st.columns(4)
@@ -282,7 +282,7 @@ def page_rules():
         conf = c3.slider("Min confidence", 0.0, 1.0, 0.6, 0.05)
         lift = c4.slider("Min lift", 1.0, float(np.ceil(r.lift.max() * 10) / 10), 1.2, 0.1)
         items = sorted({i for a in r.antecedent for i in a.split(" AND ")})
-        must = st.multiselect("Rule must include", items, placeholder="e.g. Wind=calm")
+        must = st.multiselect("Rule must include", items, placeholder="e.g. Low wind")
     if pick:
         r = r[r.set == pick]
     r = r[(r.support >= sup) & (r.confidence >= conf) & (r.lift >= lift)]
@@ -308,15 +308,20 @@ def page_rules():
         for _, x in r.head(5).iterrows():
             cond = x.antecedent.replace("=", " is ").replace(" AND ", ", ")
             test = f" · held at {x.test_confidence:.0%} in 2025–26" if "test_confidence" in r and pd.notna(x.test_confidence) else ""
+            if "status" in r and pd.notna(x.status):
+                test += f" · <b>{x.status}</b>"
             st.markdown(f'<div class="card" style="margin-bottom:8px"><div class="s">When <b>{cond}</b>, the next day is '
                         f'high-risk <b>{x.confidence:.0%}</b> of the time ({x.lift:.1f}× the usual rate){test}.</div></div>',
                         unsafe_allow_html=True)
 
-    cols = [c for c in ["antecedent", "support", "confidence", "lift", "test_days", "test_confidence"] if c in r]
+    if "lift_ci_lo" in r and r.lift_ci_lo.notna().any():
+        r = r.assign(lift_95ci=[f"{lo:.2f}–{hi:.2f}" for lo, hi in zip(r.lift_ci_lo, r.lift_ci_hi)])
+    cols = [c for c in ["antecedent", "support", "confidence", "lift", "lift_95ci", "test_days", "test_confidence", "status"] if c in r]
     st.dataframe(r[cols], hide_index=True, width="stretch", column_config={
         "support": st.column_config.ProgressColumn(min_value=0, max_value=float(rules.support.max()), format="%.3f"),
         "confidence": st.column_config.ProgressColumn(min_value=0, max_value=1, format="%.2f"),
-        "lift": st.column_config.NumberColumn(format="%.2f"),
+        "lift": st.column_config.NumberColumn(format="%.2f"), "lift_95ci": "Lift 95% CI",
+        "test_days": "Test days", "status": "Stability",
         "test_confidence": st.column_config.ProgressColumn("Confidence 2025–26", min_value=0, max_value=1, format="%.2f")})
 
     st.subheader("Compare rule sets")
