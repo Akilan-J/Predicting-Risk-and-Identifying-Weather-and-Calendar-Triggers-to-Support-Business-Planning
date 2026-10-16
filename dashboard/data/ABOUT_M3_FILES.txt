@@ -1,0 +1,4 @@
+m3_test_predictions.csv and m3_test_metrics.csv were produced by re-running M3's notebook
+(M3_Time_Series_Modelling_Final.ipynb, Part I + save cell) on M2-format inputs rebuilt from cleaned_final.csv.
+Results match M3's own run to the last decimal (max MAE difference 0.02); selected models are identical.
+Replace both files with M3's original m3_outputs/ files when they are shared.
