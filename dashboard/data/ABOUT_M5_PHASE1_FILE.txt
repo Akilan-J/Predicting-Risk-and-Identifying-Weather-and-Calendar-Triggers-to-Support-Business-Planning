@@ -1,0 +1,6 @@
+m5_test_predictions.csv was produced by re-running the Phase 1 notebook (M5_Model_Evaluation.ipynb, unchanged)
+on M4's Phase 1 files (m4_train.csv, m4_test.csv, m4_feature_list.csv from m4.zip).
+Selected model is the same (Gradient Boosting), but scores differ slightly from the original run,
+probably because of a different scikit-learn version:
+  original: recall 0.922, precision 0.837, F1 0.877  |  rerun: recall 0.914, precision 0.830, F1 0.870
+Replace this file with the original m5_test_predictions.csv from the Phase 1 run so numbers match the Phase 1 slides.
