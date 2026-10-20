@@ -594,9 +594,6 @@ def page_business():
         tag = '<span class="chip" style="background:#ec835a33;border:1px solid #ec835a">Now</span> ' if now[phase] else ""
         col.markdown(f'<div class="card"><div class="k">{tag}{phase}</div><div class="s">'
                      + "".join(f"• {s}<br>" for s in steps) + "</div></div>", unsafe_allow_html=True)
-    st.info("This is a **project forecast alert**, based on a PM2.5 threshold chosen by the team. It is not an official "
-            "AQI reading and does not set a GRAP stage; official restrictions are announced by CAQM.",
-            icon=":material/info:")
 
     grap = D.load_grap()
     if grap is not None:
