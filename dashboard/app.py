@@ -92,19 +92,55 @@ fcs, fcs_real = D.load_forecasts()
 rules, rules_real = D.load_rules()
 st.session_state.setdefault("alert_t", 0.5)
 
-ACTIONS = {
-    "Construction": {"Low": "Normal schedule.", "Watch": "Line up indoor/finishing work as a fallback.",
-                     "High": "Move dust-heavy work (excavation, demolition) out of the next days; check GRAP status.",
-                     "Severe": "Plan for a stoppage of dust-generating work; reassign crews to indoor tasks."},
-    "Logistics": {"Low": "Normal routing.", "Watch": "Check vehicle compliance; pre-plan alternative routes.",
-                  "High": "Front-load deliveries; prepare compliant (CNG/EV/BS-VI) vehicles for restrictions.",
-                  "Severe": "Expect entry restrictions on older trucks; shift volume and warn customers."},
-    "Schools": {"Low": "Outdoor activities as planned.", "Watch": "Keep an indoor plan ready for sports and assembly.",
-                "High": "Move outdoor activities indoors; prepare online-class material.",
-                "Severe": "Prepare for a switch to hybrid or online classes; inform parents early."},
-    "Events": {"Low": "Go ahead as planned.", "Watch": "Confirm indoor backup venues.",
-               "High": "Move outdoor events indoors or reschedule; tell ticket holders.",
-               "Severe": "Postpone outdoor events; activate cancellation and refund plan."},
+ACTIONS = {   # wording follows the team's "PM2.5 Risk Preparation Playbook"; the model does not decide official restrictions
+    "Construction": {"Low": "Normal schedule.",
+                     "Watch": "Review the forecast trend; prepare dust-suppression materials and covered storage.",
+                     "High": "Recheck the latest forecast; inspect dust-control arrangements so they can be applied promptly.",
+                     "Severe": "Increase dust suppression, material handling and site monitoring; follow official construction requirements."},
+    "Logistics": {"Low": "Normal routing.",
+                  "Watch": "Review delivery schedules and vehicle availability; find trips that could be combined.",
+                  "High": "Coordinate changes with drivers, customers and dispatch; prepare alternative schedules.",
+                  "Severe": "Reduce avoidable trips where feasible; follow official vehicle and traffic requirements."},
+    "Schools": {"Low": "Outdoor activities as planned.",
+                "Watch": "Prepare indoor alternatives and messages for staff and parents.",
+                "High": "Check official air-quality advisories; confirm staff know the health and safety procedures.",
+                "Severe": "Use approved procedures for outdoor activities and sensitive students; follow official directions."},
+    "Events": {"Low": "Go ahead as planned.",
+               "Watch": "Review the forecast before finalising outdoor arrangements; identify backup venues.",
+               "High": "Reassess the latest forecast; confirm how you will decide to continue, relocate or postpone.",
+               "Severe": "Reassess outdoor activities with current observations and official advice; communicate decisions clearly."},
+}
+
+PLAYBOOK = {   # "PM2.5 Risk Preparation Playbook", section 3
+    "Construction": {
+        "2–3 days ahead": ["Review the forecast trend and check whether the weather/calendar risk patterns are present.",
+                           "Prepare dust-suppression materials, site-inspection schedules and covered storage.",
+                           "Coordinate equipment, labour and deliveries in case preventive measures need to increase."],
+        "1 day ahead": ["Recheck the latest forecast and available air-quality observations.",
+                        "Inspect dust-control arrangements and confirm site procedures can be applied promptly."],
+        "If risk stays high": ["Increase attention to dust suppression, material handling and site monitoring.",
+                               "Follow applicable official construction and demolition requirements."]},
+    "Logistics": {
+        "2–3 days ahead": ["Review delivery schedules, vehicle availability and operational flexibility.",
+                           "Identify deliveries that can be consolidated or rescheduled without disrupting essential services."],
+        "1 day ahead": ["Review updated forecasts and coordinate changes with drivers, customers and dispatch teams.",
+                        "Prepare alternative schedules if high pollution coincides with operational constraints."],
+        "If risk stays high": ["Reduce avoidable trips where feasible.",
+                               "Follow applicable vehicle-emission, traffic and regulatory requirements."]},
+    "Schools": {
+        "2–3 days ahead": ["Review the forecast trend and prepare indoor alternatives for outdoor activities.",
+                           "Prepare communication for staff, parents and students."],
+        "1 day ahead": ["Check updated forecasts and official air-quality advisories.",
+                        "Confirm that staff know the relevant health and safety procedures."],
+        "If risk stays high": ["Use the institution's approved procedures for outdoor activities and sensitive students.",
+                               "Follow official government directions on school operations or hybrid classes."]},
+    "Events": {
+        "2–3 days ahead": ["Review the forecast trend before finalising outdoor arrangements.",
+                           "Identify backup venues, flexible scheduling options and attendee communication channels."],
+        "1 day ahead": ["Reassess the latest forecast and available air-quality observations.",
+                        "Confirm the decision process for continuing, modifying, relocating or postponing."],
+        "If risk stays high": ["Reassess outdoor activities using current observations, forecast uncertainty and official advice.",
+                               "Communicate decisions clearly to participants and staff."]},
 }
 
 
@@ -344,45 +380,73 @@ def page_insights():
     hero("Insights", "Set your alert level, then see what the combined findings mean for planning.")
 
     st.subheader("1. Alert threshold and cost")
-    source_badge(preds_real, "the Phase 1 model (m5_test_predictions.csv)")
-    c1, c2, c3 = st.columns(3)
-    hs = sorted(int(x) for x in preds.horizon.unique())
-    h = c1.segmented_control("Horizon", hs, default=hs[0], format_func=lambda x: f"Day +{x}", key="th_h") or hs[0]
-    ratio = c2.slider("A missed high-risk day costs … false alarms", 1, 20, 5,
-                      help="If a missed day costs 5× a false alarm, set 5.")
-    t = c3.slider("Alert threshold (probability)", 0.01, 0.99, float(st.session_state.alert_t), 0.01, key="alert_slider")
-    st.session_state.alert_t = t
-    d = preds[preds.horizon == h]
-    y, p = d.actual.values.astype(int), d.prob.values
-    today = base.set_index("date").high_risk.reindex(pd.to_datetime(d.date)).values   # baseline: tomorrow = today
-    ok = ~np.isnan(today)
-    b_tp = int(((today == 1) & (y == 1) & ok).sum())
-    b_fp = int(((today == 1) & (y == 0) & ok).sum())
-    b_fn = int(((today == 0) & (y == 1) & ok).sum())
+    src = st.radio("Alerts based on", ["M3 PM2.5 forecast (Days +1 to +3)", "Phase 1 alert model (Day +1)"],
+                   horizontal=True, key="alert_src")
+    ratio_default = 3
+    if src.startswith("M3"):
+        source_badge(fcs_real, "M3 (m3_test_predictions.csv)")
+        sel = D.selected_models(fcs)
+        c1, c2, c3 = st.columns(3)
+        h = c1.segmented_control("Horizon", [1, 2, 3], default=1, format_func=lambda x: f"Day +{x}", key="pm_h") or 1
+        ratio = c2.slider("A missed high-risk day costs … false alarms", 1, 20, ratio_default, key="pm_ratio",
+                          help="The team's cost analysis uses 3: missing a high-risk day costs three false alarms.")
+        st.session_state.setdefault("pm_t", D.THRESH)
+        t = c3.slider("Alert when forecast PM2.5 is at least (µg/m³)", 80.0, 200.0, float(st.session_state.pm_t), 0.5,
+                      key="pm_slider")
+        st.session_state.pm_t = t
+        d = fcs[(fcs.horizon == h)].dropna(subset=["actual"])
+        g_sel = d[d.model == sel[h]]
+        y, p = (g_sel.actual >= D.THRESH).values, g_sel.forecast.values
+        per = d[d.model == "Persistence"]
+        b = per.forecast.values >= D.THRESH
+        yb = (per.actual >= D.THRESH).values
+        b_tp, b_fp, b_fn = int((b & yb).sum()), int((b & ~yb).sum()), int((~b & yb).sum())
+        grid = np.round(np.arange(80, 200.5, 0.5), 1)
+        fa = np.array([((p >= g) & ~y).sum() for g in grid])
+        miss = np.array([((p < g) & y).sum() for g in grid])
+        unit, fmt = "µg/m³", "{:.1f}"
+        st.caption(f"Model: **{sel[h]}** (M3's selected model for Day +{h}). A high-risk day is PM2.5 ≥ 120.5 µg/m³.")
+    else:
+        source_badge(preds_real, "the Phase 1 model (m5_test_predictions.csv)")
+        c1, c2, c3 = st.columns(3)
+        hs = sorted(int(x) for x in preds.horizon.unique())
+        h = c1.segmented_control("Horizon", hs, default=hs[0], format_func=lambda x: f"Day +{x}", key="th_h") or hs[0]
+        ratio = c2.slider("A missed high-risk day costs … false alarms", 1, 20, ratio_default, key="p1_ratio",
+                          help="The team's cost analysis uses 3: missing a high-risk day costs three false alarms.")
+        t = c3.slider("Alert threshold (probability)", 0.01, 0.99, float(st.session_state.alert_t), 0.01, key="alert_slider")
+        st.session_state.alert_t = t
+        d = preds[preds.horizon == h]
+        y, p = d.actual.values.astype(int) == 1, d.prob.values
+        today = base.set_index("date").high_risk.reindex(pd.to_datetime(d.date)).values   # baseline: tomorrow = today
+        ok = ~np.isnan(today)
+        b_tp = int(((today == 1) & y & ok).sum()); b_fp = int(((today == 1) & ~y & ok).sum())
+        b_fn = int(((today == 0) & y & ok).sum())
+        grid = np.round(np.arange(0.01, 0.995, 0.01), 2)
+        fa = np.array([((p >= g) & ~y).sum() for g in grid])
+        miss = np.array([((p < g) & y).sum() for g in grid])
+        unit, fmt = "probability", "{:.2f}"
 
-    grid = np.round(np.arange(0.01, 0.995, 0.01), 2)
-    fa = np.array([((p >= g) & (y == 0)).sum() for g in grid])
-    miss = np.array([((p < g) & (y == 1)).sum() for g in grid])
     cost = fa + ratio * miss
     best = grid[cost.argmin()]
-    tp, fp = int(((p >= t) & (y == 1)).sum()), int(((p >= t) & (y == 0)).sum())
-    fn = int(((p < t) & (y == 1)).sum())
-
-    k = st.columns(4)
+    tp, fp, fn = int(((p >= t) & y).sum()), int(((p >= t) & ~y).sum()), int(((p < t) & y).sum())
+    k = st.columns(5)
     card(k[0], "Caught", tp, "high-risk days alerted")
     card(k[1], "Missed", fn, "high-risk days without alert")
     card(k[2], "False alarms", fp, "alerts on safe days")
     card(k[3], "Recall · Precision", f"{tp / max(tp + fn, 1):.0%} · {tp / max(tp + fp, 1):.0%}")
+    card(k[4], "Total cost", f"{fp + ratio * fn}", f"{fp} + {ratio} × {fn}")
     st.markdown("")
-    if st.button(f"Use the lowest-cost threshold for this cost ratio ({best:.2f})", type="primary"):
-        st.session_state.alert_t = float(best)
-        del st.session_state["alert_slider"]
+    if st.button(f"Use the lowest-cost threshold for this cost ratio ({fmt.format(best)})", type="primary"):
+        if src.startswith("M3"):
+            st.session_state.pm_t = float(best); del st.session_state["pm_slider"]
+        else:
+            st.session_state.alert_t = float(best); del st.session_state["alert_slider"]
         st.rerun()
 
     c1, c2 = st.columns(2)
     with c1:
         fig = go.Figure(go.Scatter(x=fa, y=miss, mode="lines", line=dict(color=BLUE, width=3), customdata=grid, name="model",
-                                   hovertemplate="threshold %{customdata:.2f}<br>false alarms %{x}<br>missed %{y}<extra></extra>"))
+                                   hovertemplate="threshold %{customdata}<br>false alarms %{x}<br>missed %{y}<extra></extra>"))
         fig.add_trace(go.Scatter(x=[fp], y=[fn], mode="markers", marker=dict(size=14, color=ORANGE), name="your threshold"))
         fig.add_trace(go.Scatter(x=[b_fp], y=[b_fn], mode="markers+text", marker=dict(size=12, color=INK, symbol="diamond"),
                                  text=["baseline"], textposition="top right", name="tomorrow = today"))
@@ -391,13 +455,30 @@ def page_insights():
         chart(fig, 340)
     with c2:
         fig = go.Figure(go.Scatter(x=grid, y=cost, mode="lines", line=dict(color=INK, width=3)))
-        fig.add_vline(x=best, line_dash="dash", line_color=AQUA, annotation_text=f"lowest cost {best:.2f}")
+        fig.add_vline(x=best, line_dash="dash", line_color=AQUA, annotation_text=f"lowest cost {fmt.format(best)}")
         fig.add_vline(x=t, line_color=ORANGE, annotation_text="yours", annotation_position="bottom right")
-        fig.update_layout(title=f"Total cost (missed = {ratio}× false alarm)", xaxis_title="Threshold",
+        fig.update_layout(title=f"Total cost (missed = {ratio}× false alarm)", xaxis_title=f"Threshold ({unit})",
                           yaxis_title="Cost (false-alarm units)")
         chart(fig, 340)
-    st.caption(f"Held-out test period: {len(d)} days (Jan 2025 – Sep 2026), {int(y.sum())} of them high-risk. "
+    st.caption(f"Held-out test period: {len(y)} days (Jan 2025 – Sep 2026), {int(y.sum())} of them high-risk. "
                f"Baseline 'tomorrow = today': caught {b_tp}, missed {b_fn}, false alarms {b_fp}.")
+
+    if src.startswith("M3"):
+        st.markdown(f"**Cost analysis: threshold 120.5 vs 140 µg/m³** (missed day = {ratio}× a false alarm)")
+        rows = []
+        for hh in (1, 2, 3):
+            g = fcs[(fcs.horizon == hh) & (fcs.model == sel[hh])].dropna(subset=["actual"])
+            yy = g.actual >= D.THRESH
+            r = {"Day": f"+{hh}", "Model": sel[hh]}
+            for tt in (120.5, 140):
+                aa = g.forecast >= tt
+                f_, m_ = int((aa & ~yy).sum()), int((~aa & yy).sum())
+                r[f"{tt:g}: FP / FN"] = f"{f_} / {m_}"; r[f"{tt:g}: cost"] = f_ + ratio * m_
+            r["Lower cost"] = "120.5" if r["120.5: cost"] <= r["140: cost"] else "140"
+            rows.append(r)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+        st.caption("Costs are illustrative units, not rupees: the ratio is an assumption that a missed high-risk day "
+                   "is worse than an unnecessary alert.")
 
     st.subheader("2. Combined findings")
     k = st.columns(4)
@@ -431,8 +512,97 @@ def page_insights():
              + (f"<br>2025–26: {res['test']['confidence']:.0%} ({res['test']['days']} days)" if res["test"]["days"] else ""),
              chip=lvl)
         g2.markdown("\n".join(f"- **{s}:** {ACTIONS[s][lvl]}" for s in ACTIONS))
-    st.caption("Recommendations are planning suggestions. GRAP stage details are to be added by M1 from the official CAQM "
-               "document; this dashboard does not decide GRAP stages.")
+    st.caption("Recommendations are planning suggestions based on past patterns in the data.")
+
+
+# ================================================================ 6. MY BUSINESS (plain-language view)
+CAUTION = {
+    "Cautious: warn me early": dict(p=0.2, pm=100.0, note="You'll get more warnings, including some that turn out fine."),
+    "Balanced": dict(p=0.5, pm=120.5, note="Warnings when a high-pollution day is more likely than not."),
+    "Only when very likely": dict(p=0.8, pm=150.0, note="Fewer warnings, but you may miss some bad days."),
+}
+LEVEL_WORDS = {"Good": "Good air", "Satisfactory": "Satisfactory air", "Moderate": "Moderate air",
+               "Poor": "Poor air", "Very Poor": "Very poor air", "Severe": "Severe air"}
+def page_business():
+    hero("My Business", "What the next 3 days mean for your business, in plain words.")
+    c1, c2 = st.columns(2)
+    sector = c1.selectbox("Your business", list(ACTIONS))
+    caution = c2.radio("When should we warn you?", list(CAUTION), index=1)
+    cfg = CAUTION[caution]
+    st.caption(cfg["note"] + " We warn when the PM2.5 forecast, or (for tomorrow) the alert model, crosses your level.")
+
+    dates = sorted(preds.loc[preds.horizon == 1, "date"].unique())
+    fc_dates = set(fcs.loc[fcs.horizon == 3, "date"])
+    dates = [x for x in dates if x in fc_dates] or dates
+    st.session_state.setdefault("asof", dates[-1])
+    diwali = base.loc[(base.days_from_diwali == 0) & (base.date >= D.TEST_START), "date"]
+    win = preds[(preds.horizon == 1) & pd.to_datetime(preds.target_date).dt.month.isin([11, 12, 1])]
+    jumps = {"Latest date": dates[-1],
+             "Day before Diwali 2025": (diwali.iloc[0] - pd.Timedelta(days=1)) if len(diwali) else dates[-1],
+             "A winter week": win.loc[win.prob.idxmax(), "date"] if len(win) else dates[-1]}
+    for col, (lbl, dt) in zip(st.columns(len(jumps)), jumps.items()):
+        if col.button(lbl, width="stretch", key=f"biz_{lbl}"):
+            st.session_state.asof = pd.Timestamp(dt)
+    asof = st.select_slider("Day you are planning from", options=dates, key="asof",
+                            format_func=lambda x: pd.Timestamp(x).strftime("%a %d %b %Y"))
+    st.caption("By default this is the last day in the data (30 Sep 2026); the dashboard has no live feed.")
+
+    sel = D.selected_models(fcs)
+    p1 = preds[(preds.date == asof) & (preds.horizon == 1)]
+    cols = st.columns(3)
+    alerts = {}
+    for col, h in zip(cols, D.HORIZONS):
+        f = fcs[(fcs.date == asof) & (fcs.horizon == h) & (fcs.model == sel.get(h))]
+        if f.empty:
+            card(col, f"Day +{h}", "–", "no forecast for this day"); continue
+        f = f.iloc[0]
+        pm = float(f.forecast)
+        cat = pd.cut([pm], D.CATEGORY_EDGES, labels=D.CATEGORIES, right=False)[0]
+        if h == 1 and len(p1):
+            prob = float(p1.prob.iloc[0]); alert = prob >= cfg["p"] or pm >= cfg["pm"]   # either signal warns
+            chance = f"Chance of a high-pollution day: <b>{prob:.0%}</b><br>"
+        else:
+            alert = pm >= cfg["pm"]; chance = ""
+        alerts[h] = alert
+        key = ("Severe" if cat == "Severe" else "High") if alert else ("Watch" if cat in ("Poor", "Very Poor") else "Low")
+        head = "Prepare" if alert else ("Keep an eye" if key == "Watch" else "No action needed")
+        card(col, f"{pd.Timestamp(f.target_date):%A %d %b}", head,
+             f"{LEVEL_WORDS[cat]} expected (AQI ≈ {D.pm25_to_aqi(pm):.0f})<br>{chance}<b>What to do:</b> {ACTIONS[sector][key]}",
+             chip=key)
+
+    st.subheader("Why we think so")
+    items = D.day_items(asof)
+    match = rules[[set(x.split(" AND ")) <= items for x in rules.antecedent]] if items else rules.iloc[0:0]
+    match = match.sort_values(["lift", "confidence"], ascending=False)
+    if match.empty:
+        st.markdown(f"None of the association rules match the conditions on {pd.Timestamp(asof):%d %b}, so there is "
+                    "no strong weather or calendar warning sign for tomorrow.")
+    else:
+        for _, x in match.head(2).iterrows():
+            cond = x.antecedent.replace(" AND ", ", ").lower()
+            test = f", and {x.test_confidence:.0%} of the time in 2025–26" if pd.notna(x.get("test_confidence")) else ""
+            st.markdown(f'<div class="card" style="margin-bottom:8px"><div class="s">Days like {pd.Timestamp(asof):%d %b} '
+                        f'(<b>{cond}</b>) were followed by a high-pollution day <b>{x.confidence:.0%}</b> of the time in '
+                        f'2018–24{test}. That is {x.lift:.1f}× the usual rate.</div></div>', unsafe_allow_html=True)
+    st.caption("Based on M4's association rules. They describe what usually happens together, not what causes it.")
+
+    st.subheader(f"Preparation checklist: {sector.lower()}")
+    st.caption("From the team's PM2.5 Risk Preparation Playbook. Highlighted steps match the warnings above.")
+    now = {"2–3 days ahead": any(alerts.get(x) for x in (2, 3)), "1 day ahead": bool(alerts.get(1)),
+           "If risk stays high": sum(bool(v) for v in alerts.values()) >= 2}
+    for col, (phase, steps) in zip(st.columns(3), PLAYBOOK[sector].items()):
+        tag = '<span class="chip" style="background:#ec835a33;border:1px solid #ec835a">Now</span> ' if now[phase] else ""
+        col.markdown(f'<div class="card"><div class="k">{tag}{phase}</div><div class="s">'
+                     + "".join(f"• {s}<br>" for s in steps) + "</div></div>", unsafe_allow_html=True)
+    st.info("This is a **project forecast alert**, based on a PM2.5 threshold chosen by the team. It is not an official "
+            "AQI reading and does not set a GRAP stage; official restrictions are announced by CAQM.",
+            icon=":material/info:")
+
+    grap = D.load_grap()
+    if grap is not None:
+        st.subheader("Official restrictions (GRAP, CAQM)")
+        g = grap[grap["sector"].str.lower() == sector.lower()] if "sector" in grap else grap
+        st.dataframe(g if len(g) else grap, hide_index=True, width="stretch")
 
 
 # ================================================================ 7. DATASET
@@ -526,6 +696,7 @@ pg = st.navigation([
     st.Page(page_forecast, title="Forecast (Method 1)", icon=":material/show_chart:"),
     st.Page(page_rules, title="Rules (Method 2)", icon=":material/account_tree:"),
     st.Page(page_insights, title="Insights", icon=":material/lightbulb:"),
+    st.Page(page_business, title="My business", icon=":material/storefront:"),
 ])
 with st.sidebar:
     st.markdown("### Delhi Air-Risk Planner")

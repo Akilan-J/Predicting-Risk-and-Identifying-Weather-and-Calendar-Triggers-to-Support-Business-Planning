@@ -347,3 +347,28 @@ def rule_check(conds: dict) -> dict:
         res[name] = dict(days=n, support=(part.next_high_risk.values[mask].sum()) / len(part), confidence=conf,
                          lift=conf / base if n else np.nan, base_rate=base)
     return res
+
+
+def day_items(date) -> set:
+    """M4 rule items that describe day t (used to find which M4 rules apply to tomorrow)."""
+    c = m4_pairs()
+    row = c[c.date == pd.Timestamp(date)]
+    if row.empty:
+        return set()
+    r = row.iloc[0]
+    items = {r.Wind, r.Humidity, r.Pressure, r.Rain, r.Season, "Mild temp" if r.Temp == "Mild" else r.Temp}
+    if r.Festival == "Diwali window":
+        items.add("Diwali window")
+    if r.Weekend == "Weekend":
+        items.add("Weekend")
+    if r.Yesterday == "Yesterday was high-risk":
+        items.add("Yesterday was high-risk")
+    return items
+
+
+@st.cache_data
+def load_grap():
+    """Optional: official GRAP actions (from the CAQM document) as data/grap_actions.csv.
+    Expected columns: stage, aqi_range, sector, action. Shown only when the file exists."""
+    p = DATA / "grap_actions.csv"
+    return pd.read_csv(p) if p.exists() else None

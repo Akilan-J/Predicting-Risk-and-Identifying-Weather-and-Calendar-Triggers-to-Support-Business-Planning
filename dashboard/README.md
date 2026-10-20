@@ -20,6 +20,7 @@ streamlit run app.py
 | Forecast (Method 1) | Actual vs forecast per horizon, intervals, MAE/RMSE, alert recall/precision, model comparison | Method 1 results, compare alternatives |
 | Rules (Method 2) | Support/confidence/lift filters, bubble chart, plain-language rules, test-period confidence, Set A vs Set B | Method 2 results, compare alternatives |
 | Insights | Alert threshold + cost ratio, model vs "tomorrow = today" baseline, combined findings, what-if planner with sector actions | Interactions that update results; combined business insights |
+| My business | Pick a sector and how cautious to be; plain-language outlook for the next 3 days, what to do, and which association rules apply | Business recommendations; live user scenarios |
 
 ## Data contract
 
@@ -33,10 +34,15 @@ clearly labelled **placeholder** from `cleaned_final.csv`, and switches automati
 | `m3_test_predictions.csv` | M3 | Overview, Forecast (M3 notebook output: origin_date, target_date, horizon, actual_pm25, one column per model, selected) |
 | `m3_test_metrics.csv` | M3 | Forecast evaluation table with 95% intervals |
 | `p2_rules.csv` | M4 | Rule explorer (antecedent, consequent, support, confidence, lift, test_confidence) |
-| `m5_test_predictions.csv` | Phase 1 model | Control room, Alert threshold (date, prob, actual, optional horizon) |
+| `m5_test_predictions.csv` | M5 (Phase 1) | Control room, Alert threshold (date, prob, actual, optional horizon) |
 
 ## Notes
 
 - The Control room shows the **last date in the data**, not today (no live feed).
 - Rules are **associations, not causes**.
 - Placeholders use past-only features and are trained on 2018–2024, tested on Jan 2025 – Sep 2026.
+
+## Optional: GRAP restrictions
+
+Put the official GRAP actions (CAQM) in `data/grap_actions.csv` with columns `stage, aqi_range, sector, action`.
+The *My business* page then shows the rows for the chosen sector. Without the file, nothing about GRAP is shown.
