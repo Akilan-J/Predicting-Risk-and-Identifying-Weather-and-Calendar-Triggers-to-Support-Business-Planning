@@ -584,10 +584,10 @@ def page_business():
             st.markdown(f'<div class="card" style="margin-bottom:8px"><div class="s">Days like {pd.Timestamp(asof):%d %b} '
                         f'(<b>{cond}</b>) were followed by a high-pollution day <b>{x.confidence:.0%}</b> of the time in '
                         f'2018–24{test}. That is {x.lift:.1f}× the usual rate.</div></div>', unsafe_allow_html=True)
-    st.caption("Based on M4's association rules. They describe what usually happens together, not what causes it.")
+    st.caption("These patterns describe what usually happens together, not what causes it.")
 
     st.subheader(f"Preparation checklist: {sector.lower()}")
-    st.caption("From the team's PM2.5 Risk Preparation Playbook. Highlighted steps match the warnings above.")
+    st.caption("Highlighted steps match the warnings above.")
     now = {"2–3 days ahead": any(alerts.get(x) for x in (2, 3)), "1 day ahead": bool(alerts.get(1)),
            "If risk stays high": sum(bool(v) for v in alerts.values()) >= 2}
     for col, (phase, steps) in zip(st.columns(3), PLAYBOOK[sector].items()):
