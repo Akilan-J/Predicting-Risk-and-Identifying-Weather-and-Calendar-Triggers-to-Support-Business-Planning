@@ -42,7 +42,9 @@ clearly labelled **placeholder** from `cleaned_final.csv`, and switches automati
 - Rules are **associations, not causes**.
 - Placeholders use past-only features and are trained on 2018–2024, tested on Jan 2025 – Sep 2026.
 
-## Optional: GRAP restrictions
+## GRAP restrictions
 
-Put the official GRAP actions (CAQM) in `data/grap_actions.csv` with columns `stage, aqi_range, sector, action`.
-The *My business* page then shows the rows for the chosen sector. Without the file, nothing about GRAP is shown.
+`data/grap_actions.csv` lists the official GRAP actions for each sector (columns `stage, aqi_range, sector, action`),
+summarised from the CAQM *Graded Response Action Plan for NCR*, Revision 29.09.2026
+(https://caqm.nic.in/landingpage/pages/grap/grap-schedule). The *My business* page shows the rows for the chosen sector.
+The dashboard never declares a GRAP stage; check CAQM orders for the stage in force.

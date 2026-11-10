@@ -1,0 +1,26 @@
+stage,aqi_range,sector,action
+Stage I (Poor),201-300,Construction,"Enforce dust mitigation: store and cover C&D materials and waste, move them only in covered vehicles, use anti-smog guns and water sprinkling."
+Stage I (Poor),201-300,Construction,C&D projects of 500 sq m or more that are not registered on the State/GNCTD dust-monitoring web portal are not permitted to carry out C&D activities.
+Stage I (Poor),201-300,Construction,Diesel generator sets must not be used as a regular power source; their use is regulated under CAQM Direction No. 76.
+Stage II (Very Poor),301-400,Construction,Intensified inspections to enforce dust-control measures at C&D sites.
+Stage III (Severe),401-450,Construction,"Strict restrictions across NCR on dust-generating work: excavation, boring and drilling, piling, demolition, open-trench cabling and pipe laying, brick/masonry work, RMC batching plants, major welding and gas cutting, painting and plastering, tile and stone cutting, road construction and major repairs (pothole repair allowed), loading/unloading of dust-generating materials, and construction vehicles on unpaved roads."
+Stage III (Severe),401-450,Construction,"Less dust-generating work may continue with strict dust-control compliance. Railway, metro, airport/ISBT, defence/national-importance, hospital, linear public and sanitation/water-supply projects may continue all activities."
+Stage III (Severe),401-450,Construction,Stone crushers and all mining activities closed across NCR.
+Stage IV (Severe+),>450,Construction,"The Stage III restrictions also apply to linear public projects such as highways, roads, flyovers, power transmission, pipelines and telecommunication."
+Stage I (Poor),201-300,Logistics,Strict PUC enforcement; visibly polluting vehicles impounded or fined; ban on overaged diesel/petrol vehicles enforced.
+Stage I (Poor),201-300,Logistics,Trucks not bound for Delhi diverted through the Eastern and Western Peripheral Expressways.
+Stage I (Poor),201-300,Logistics,"Only EV, CNG or BS-VI diesel inter-city/inter-state buses may ply in Delhi-NCR."
+Stage II (Very Poor),301-400,Logistics,Vehicle parking fees increased to discourage private transport.
+Stage III (Severe),401-450,Logistics,Diesel BS-IV and older light and medium goods vehicles registered outside Delhi are not allowed to enter Delhi; Delhi-registered diesel BS-IV and older medium goods vehicles are restricted in Delhi.
+Stage III (Severe),401-450,Logistics,"BS-III petrol and BS-IV diesel four-wheelers restricted in Delhi, Gurugram, Faridabad, Sonipat, Ghaziabad and Gautam Buddha Nagar."
+Stage IV (Severe+),>450,Logistics,"Truck (HGV) entry into Delhi stopped and Delhi-registered diesel BS-IV and older HGVs banned; LNG, CNG, electric and BS-VI diesel trucks are allowed."
+Stage IV (Severe+),>450,Logistics,States may consider emergency measures such as closing non-emergency commercial activities and odd-even vehicle rules.
+Stage III (Severe),401-450,Schools,"Classes up to Class V in hybrid mode (physical and online where feasible) in Delhi, Gurugram, Faridabad, Ghaziabad and Gautam Buddha Nagar; other NCR areas may follow. The online option rests with students and guardians."
+Stage IV (Severe+),>450,Schools,Classes VI to IX and XI also move to hybrid mode in the same areas.
+Stage IV (Severe+),>450,Schools,States may consider closing colleges and educational institutions.
+Stage I (Poor),201-300,Events,Court orders on firecrackers strictly enforced.
+Stage I (Poor),201-300,Events,"No coal or firewood in tandoors at hotels, restaurants and open eateries; only electric, gas or clean-fuel appliances."
+Stage I (Poor),201-300,Events,Diesel generator sets must not be used as a regular power source; their use is regulated under CAQM Direction No. 76.
+Stage II (Very Poor),301-400,Events,"Citizen charter: avoid outdoor smoke-generating cooking and heating, and use public transport."
+Stage III (Severe),401-450,Events,Citizen charter: postpone private gatherings that increase traffic and outdoor exposure.
+Stage IV (Severe+),>450,Events,"Citizens advised to limit non-essential outdoor activity; children, the elderly and people with heart or lung conditions should stay indoors."

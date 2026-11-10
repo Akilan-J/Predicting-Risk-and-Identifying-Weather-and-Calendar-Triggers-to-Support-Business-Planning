@@ -599,7 +599,13 @@ def page_business():
     if grap is not None:
         st.subheader("Official restrictions (GRAP, CAQM)")
         g = grap[grap["sector"].str.lower() == sector.lower()] if "sector" in grap else grap
-        st.dataframe(g if len(g) else grap, hide_index=True, width="stretch")
+        g = g if len(g) else grap
+        st.caption("From the CAQM Graded Response Action Plan for NCR (revision 29.09.2026). Each stage adds to the "
+                   "ones before it. CAQM decides which stage is in force.")
+        cols = st.columns(max(g.stage.nunique(), 1))
+        for col, (stage, rows) in zip(cols, g.groupby("stage", sort=False)):
+            col.markdown(f'<div class="card"><div class="k">{stage} · AQI {rows.aqi_range.iloc[0]}</div><div class="s">'
+                         + "".join(f"• {a}<br>" for a in rows.action) + "</div></div>", unsafe_allow_html=True)
 
 
 # ================================================================ 7. DATASET
