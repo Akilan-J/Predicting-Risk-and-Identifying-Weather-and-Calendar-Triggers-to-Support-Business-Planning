@@ -1,0 +1,112 @@
+,AUC,group
+aqi_pm25_lag1,0.9711250170596063,Phase 1 feature
+pm25_mean_lag1,0.9652548673149555,Phase 1 feature
+pm25_mean_roll3_mean,0.9565688012283514,Phase 1 feature
+pm25_mean_roll7_mean,0.9521523723282252,Phase 1 feature
+aqi_pm25_lag2,0.949559144045968,Phase 1 feature
+pm25_mean_lag2,0.9434069897264894,Phase 1 feature
+high_risk_past7d,0.9428944240318425,Phase 1 feature
+aqi_pm25_lag3,0.9350699108224155,Phase 1 feature
+day_of_year_cos,0.9340525587571963,Phase 1 feature
+high_risk_past3d,0.9313338609980402,Phase 1 feature
+pm25_mean_lag3,0.9292994878039433,Phase 1 feature
+month_cos,0.9276644756365364,Phase 1 feature
+pressure_mean_roll7_mean,0.9166355534256142,Phase 1 feature
+pressure_mean_roll3_mean,0.9146926011784023,Phase 1 feature
+pressure_mean_lag1,0.9118153229461545,Phase 1 feature
+pressure_mean_lag2,0.9107133555578707,Phase 1 feature
+pressure_mean_lag3,0.9094878822205495,Phase 1 feature
+temp_min,0.9082693149445071,Phase 1 feature
+pressure_mean,0.9077003828120364,Phase 1 feature
+prev_high_risk,0.9041570414896876,Phase 1 feature
+temp_mean_lag2,0.9025130966023246,Phase 1 feature
+temp_mean_roll3_mean,0.9023833671399595,Phase 1 feature
+temp_mean_lag3,0.9014876139302296,Phase 1 feature
+temp_mean_roll7_mean,0.9001316043658842,Phase 1 feature
+temp_mean_lag1,0.8997949312350935,Phase 1 feature
+temp_mean,0.8980466199774467,Phase 1 feature
+temp_pressure_interaction,0.8975115362929551,Phase 1 feature
+pm10_mean_lag1,0.8903127022855152,Phase 1 feature
+is_winter,0.885193483292777,Phase 1 feature
+temp_max,0.8808678371119948,Phase 1 feature
+pm25_mean_roll7_std,0.8805540770505198,Phase 1 feature
+pm10_mean_lag2,0.8589522569749851,Phase 1 feature
+pm10_mean_lag3,0.8366160655278074,Phase 1 feature
+pm25_mean_roll3_std,0.8120467120403467,Phase 1 feature
+dewpoint_mean,0.8049346400379844,Phase 1 feature
+precip_sum_roll7_mean,0.7677076135493985,Phase 1 feature
+wind_gust_max,0.758240937889489,Phase 1 feature
+precip_sum_roll3_mean,0.7534572847706722,Phase 1 feature
+precip_sum_roll7_std,0.7486708064828181,Phase 1 feature
+season_monsoon,0.7392909074722536,Phase 1 feature
+season_post_monsoon,0.7337787109027242,Phase 1 feature
+precip_sum_roll3_std,0.7254215468873246,Phase 1 feature
+precip_sum_lag1,0.7116220493502441,Phase 1 feature
+precip_sum_lag2,0.7058459400532794,Phase 1 feature
+wind_speed_mean_roll7_mean,0.7018905705518281,Phase 1 feature
+days_from_diwali,0.7016903822185293,Phase 1 feature
+cloud_mean_lag2,0.694732896283839,Phase 1 feature
+is_cold_day,0.6924743308208202,Phase 1 feature
+cloud_mean_lag3,0.6921559549272263,Phase 1 feature
+precip_sum_lag3,0.6882447851069062,Phase 1 feature
+precip_sum,0.6814230443943261,Phase 1 feature
+cloud_mean_lag1,0.6781799589862471,Phase 1 feature
+is_dry_day,0.675188438482996,Phase 1 feature
+wind_speed_mean_roll3_mean,0.6699145175311504,Phase 1 feature
+wind_speed_mean_lag1,0.6554802955665024,Phase 1 feature
+temp_range,0.65380642026233,Phase 1 feature
+cloud_mean,0.6480373464300552,Phase 1 feature
+wind_speed_mean,0.6466769170277168,Phase 1 feature
+season_winter,0.6448008783904089,Phase 1 feature
+season_pre_monsoon,0.6392886818208796,Phase 1 feature
+wind_speed_mean_lag2,0.6326858824579942,Phase 1 feature
+wind_speed_mean_roll7_std,0.6245525947643356,Phase 1 feature
+wind_dir_deg,0.6191613745622886,Phase 1 feature
+wind_speed_mean_lag3,0.6165972962297758,Phase 1 feature
+humidity_mean_roll7_std,0.6161914187489768,Phase 1 feature
+is_post_monsoon,0.6122989494925515,Phase 1 feature
+month,0.6040774860525847,Phase 1 feature
+wind_speed_mean_roll3_std,0.5934463039304689,Phase 1 feature
+diwali_within_14d,0.592869012997804,Phase 1 feature
+temp_mean_roll3_std,0.591074405071957,Phase 1 feature
+humidity_mean,0.5857631573090392,Phase 1 feature
+humidity_mean_roll3_std,0.583137380381885,Phase 1 feature
+temp_mean_roll7_std,0.5780122185346688,Phase 1 feature
+humidity_mean_roll7_mean,0.5747929808528186,Phase 1 feature
+humidity_mean_lag3,0.5739559035049149,Phase 1 feature
+humidity_mean_roll3_mean,0.5720271530362808,Phase 1 feature
+humidity_mean_lag1,0.5713213004034505,Phase 1 feature
+pressure_mean_roll7_std,0.5707969952227167,Phase 1 feature
+humidity_mean_lag2,0.5704821372762043,Phase 1 feature
+humidity_mean_change,0.5533434195959551,Phase 1 feature
+diwali_within_7d,0.5502848833758679,Phase 1 feature
+day_of_year_sin,0.5450114806516707,Phase 1 feature
+pressure_mean_roll3_std,0.5425202402035927,Phase 1 feature
+is_festival_window,0.5360110392308148,Phase 1 feature
+diwali_within_3d,0.521292064810968,Phase 1 feature
+month_sin,0.5202404445367678,Phase 1 feature
+low_wind,0.5191814054246543,Phase 1 feature
+high_humidity,0.5171968662828654,Phase 1 feature
+cold_calm_dry,0.5167035135616357,Phase 1 feature
+temp_mean_change,0.5134548514365959,Phase 1 feature
+wind_speed_mean_change,0.5126106145375923,Phase 1 feature
+wind_humidity_interaction,0.5090537643183571,Phase 1 feature
+day_of_week,0.5069018376461512,Phase 1 feature
+pressure_mean_change,0.5028605606698913,Phase 1 feature
+is_weekend,0.5028154489880705,Phase 1 feature
+pm25_target,1.0,banned
+pm25_ref_station,1.0,banned
+aqi_pm25,1.0,banned
+pm25_median,0.9933856423229865,banned
+pm25_mean,0.9931649318950679,banned
+high_risk_city,0.971700842779987,banned
+next_pm25,0.9631372901066221,banned
+pm10_mean,0.916824306154431,banned
+pm10_median,0.9167964874212962,banned
+pm25_pm10_ratio,0.8963149451507312,banned
+pm25_mean_change,0.5871740536176908,banned
+pm10_n_stations,0.532116613003739,banned
+pm25_n_stations,0.5291207935189032,banned
+pm10_available,0.5177792450590539,banned
+pm10_n_extreme_flagged,0.5112951807228916,banned
+pm25_n_extreme_flagged,0.5082831325301205,banned

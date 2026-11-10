@@ -1,0 +1,5 @@
+comparison,F1 difference [95% CI],CI excludes 0
+A minus B (value of same-day weather),"-0.007 [-0.027, 0.013]",False
+A minus C (value of all weather),"-0.000 [-0.028, 0.031]",False
+A minus persistence (Phase 1 headline),"-0.001 [-0.034, 0.030]",False
+B minus persistence,"0.006 [-0.032, 0.040]",False
