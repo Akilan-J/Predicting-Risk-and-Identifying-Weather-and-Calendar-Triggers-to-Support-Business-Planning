@@ -119,7 +119,7 @@ alerts are planning signals and do not declare official GRAP stages.
 | `notebooks/` | Complete implementation of Units 1–3 (order below) |
 | `notebooks/scripts/` | Helper scripts used while building the association rules |
 | `dashboard/` | Streamlit application (`app.py`, `dash_data.py`, `data/`) |
-| `visualizations/` | Project charts by stage: EDA, feature engineering, time series, association rules |
+| `visualizations/` | Project charts by stage: EDA, feature engineering, time series, association rules, and dashboard screenshots (`05_dashboard/`) |
 
 ### Notebooks (run in this order)
 
